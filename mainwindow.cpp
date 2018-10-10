@@ -20,12 +20,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
    buildModel();
 
-   m_table_view->resizeRowsToContents();
-   m_table_view->setColumnWidth(1, 350);
-   m_table_view->setColumnWidth(2, 200);
-   m_table_view->setColumnWidth(3, 250);
-   m_table_view->setColumnWidth(6, 50);
-   m_table_view->horizontalHeader()->setStretchLastSection(true);
    m_table_view->setContextMenuPolicy(Qt::CustomContextMenu);
    connect(m_table_view, &QTableView::customContextMenuRequested, [this](const QPoint& pos){
       QModelIndex index = m_table_view->indexAt(pos);
@@ -121,6 +115,12 @@ void MainWindow::buildModel()
     });
 
     m_table_view->setModel(m_model);
+    m_table_view->resizeRowsToContents();
+    m_table_view->setColumnWidth(1, 350);
+    m_table_view->setColumnWidth(2, 200);
+    m_table_view->setColumnWidth(3, 250);
+    m_table_view->setColumnWidth(6, 50);
+    m_table_view->horizontalHeader()->setStretchLastSection(true);
 }
 
 void MainWindow::buildModelfromItems(std::vector<powersupply>& items)
@@ -181,6 +181,12 @@ void MainWindow::buildModelfromItems(std::vector<powersupply>& items)
     });
 
     m_table_view->setModel(m_model);
+    m_table_view->resizeRowsToContents();
+    m_table_view->setColumnWidth(1, 350);
+    m_table_view->setColumnWidth(2, 200);
+    m_table_view->setColumnWidth(3, 250);
+    m_table_view->setColumnWidth(6, 50);
+    m_table_view->horizontalHeader()->setStretchLastSection(true);
 }
 
 void MainWindow::addPowerSupply()
@@ -202,7 +208,7 @@ void MainWindow::addPowerSupply()
     powersupply* item = new powersupply;
     item->image = QImage("path");
 
-    QPushButton* add_image = new QPushButton;
+    QPushButton* add_image = new QPushButton(tr("Ajouter image"));
     connect(add_image, &QPushButton::clicked, [this, item]{
         QFileDialog dialog(this);
         dialog.setFileMode(QFileDialog::ExistingFile);
@@ -211,7 +217,7 @@ void MainWindow::addPowerSupply()
         item->image = QImage(path);
     });
 
-    QPushButton* validate = new QPushButton;
+    QPushButton* validate = new QPushButton(tr("Valider"));
     connect(validate, &QPushButton::clicked, [this, item, window, model, part_num, trademark, voltage, amperage, location]() mutable {
         item->model = model->text();
         item->part_num = part_num->text();
@@ -280,7 +286,33 @@ void MainWindow::findPowerSupply()
 void MainWindow::viewPowerSupply(powersupply& item)
 {
     QLabel* label = new QLabel;
+    label->setMinimumSize(300, 300);
     label->setPixmap(QPixmap::fromImage(item.image));
+    label->resize(label->pixmap()->size());
+    label->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    connect(label, &QLabel::customContextMenuRequested, [this, label, item](const QPoint& pos){
+        QAction* modify = new QAction(tr("modifier"));
+        connect(modify, &QAction::triggered, [this, item, label]() mutable {
+            QFileDialog dialog(this);
+            dialog.setFileMode(QFileDialog::ExistingFile);
+            QString path = dialog.getOpenFileName();
+
+            if(path != "")
+            {
+                qDebug() << path;
+                item.image = QImage(path);
+                m_stock_manager->updateItem(item, item.model);
+
+                label->setPixmap(QPixmap::fromImage(item.image));
+                label->resize(label->pixmap()->size());
+            }
+        });
+
+        QMenu* menu = new QMenu(this);
+        menu->addAction(modify);
+        menu->popup(label->mapToGlobal(pos));
+    });
 
     label->show();
 }

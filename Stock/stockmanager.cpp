@@ -152,7 +152,7 @@ void StockManager::updateItem(powersupply item, QString old_model)
     }
 
     QSqlQuery query;
-    query.prepare("UPDATE powersupply SET model=:model, location=:location, trademark=:trademark, voltage=:voltage, amperage=:amperage, part_num=:part_num "
+    query.prepare("UPDATE powersupply SET model=:model, location=:location, trademark=:trademark, voltage=:voltage, amperage=:amperage, part_num=:part_num, image=:image "
                   "WHERE model=:old_model");
     query.bindValue(":model", item.model);
     query.bindValue(":location", item.location);
@@ -160,6 +160,13 @@ void StockManager::updateItem(powersupply item, QString old_model)
     query.bindValue(":voltage", item.voltage);
     query.bindValue(":amperage", item.amperage);
     query.bindValue(":part_num", item.part_num);
+
+    QByteArray ba;
+    QBuffer buffer(&ba);
+    buffer.open(QIODevice::WriteOnly);
+    item.image.save(&buffer, "PNG");
+    query.bindValue(":image", ba);
+
     query.bindValue(":old_model", old_model);
 
     if(!query.exec())
