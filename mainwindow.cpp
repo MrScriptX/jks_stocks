@@ -16,7 +16,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
    m_table_view = new QTableView;
    m_model = new QStandardItemModel;
-   m_model->setHorizontalHeaderLabels(QStringList({tr("Location"), tr("Modele"), tr("Marque"), tr("Part num"), tr("Voltage"), tr("Amperage"), tr("Quantité")}));
 
    buildModel();
 
@@ -47,7 +46,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
    connect(this, &MainWindow::dataChanged, this, &MainWindow::buildModel);
 
    setCentralWidget(m_table_view);
-   setFixedSize(1280, 720);
+   setFixedSize(1280, 730);
 }
 
 void MainWindow::buildModel()
@@ -121,6 +120,7 @@ void MainWindow::buildModel()
     m_table_view->setColumnWidth(3, 250);
     m_table_view->setColumnWidth(6, 50);
     m_table_view->horizontalHeader()->setStretchLastSection(true);
+    m_model->setHorizontalHeaderLabels(QStringList({tr("Location"), tr("Modele"), tr("Marque"), tr("Part num"), tr("Voltage"), tr("Amperage"), tr("Quantité")}));
 }
 
 void MainWindow::buildModelfromItems(std::vector<powersupply>& items)
@@ -187,6 +187,7 @@ void MainWindow::buildModelfromItems(std::vector<powersupply>& items)
     m_table_view->setColumnWidth(3, 250);
     m_table_view->setColumnWidth(6, 50);
     m_table_view->horizontalHeader()->setStretchLastSection(true);
+    m_model->setHorizontalHeaderLabels(QStringList({tr("Location"), tr("Modele"), tr("Marque"), tr("Part num"), tr("Voltage"), tr("Amperage"), tr("Quantité")}));
 }
 
 void MainWindow::addPowerSupply()
