@@ -21,3 +21,6 @@ SOURCES += \
 HEADERS += \
     mainwindow.h \
     Stock/stockmanager.h
+
+RESOURCES += \
+    ressources.qrc
