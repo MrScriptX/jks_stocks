@@ -169,3 +169,89 @@ void StockManager::updateItem(powersupply item, QString old_model)
 
     db.close();
 }
+
+void StockManager::findItem(const QString& arg, const datatype& type, std::vector<powersupply>& items_list)
+{
+    QSqlDatabase db = QSqlDatabase::database();
+    if(!db.open())
+    {
+        qDebug() << "Failed to open database!";
+    }
+
+    QSqlQuery query;
+    if(type == datatype::MODEL)
+    {
+        query.prepare("SELECT * FROM powersupply WHERE UPPER(model) LIKE UPPER(:arg)");
+    }
+    else if(type == datatype::PART_NUM)
+    {
+        query.prepare("SELECT * FROM powersupply WHERE UPPER(part_num) LIKE UPPER(:arg)");
+    }
+    else if(type == datatype::TRADEMARK)
+    {
+        query.prepare("SELECT * FROM powersupply WHERE UPPER(trademark) LIKE UPPER(:arg)");
+    }
+    else
+    {
+        db.close();
+        qDebug() << "Unable to fetch : unknown data type";
+        return;
+    }
+
+    query.bindValue(":arg", '%'+arg+'%');
+
+    if(!query.exec())
+    {
+        qDebug() << query.lastError().text();
+    }
+
+    items_list.clear();
+    while(query.next())
+    {
+        powersupply item;
+        item.model = query.value(0).toString();
+        item.location = query.value(1).toInt();
+        item.trademark = query.value(2).toString();
+        item.part_num = query.value(3).toString();
+        item.voltage = query.value(4).toString();
+        item.amperage = query.value(5).toString();
+        item.quantity = query.value(6).toInt();
+        item.image = QImage::fromData(query.value(7).toByteArray(), "PNG");
+
+        items_list.push_back(item);
+    }
+
+    db.close();
+}
+
+void StockManager::loadItem(const QString& model, powersupply& item)
+{
+    QSqlDatabase db = QSqlDatabase::database();
+    if(!db.open())
+    {
+        qDebug() << "Failed to open database!";
+    }
+
+    QSqlQuery query;
+    query.prepare("SELECT * FROM powersupply WHERE model=:model");
+    query.bindValue(":model", model);
+
+    if(!query.exec())
+    {
+        qDebug() << query.lastError().text();
+    }
+
+    while(query.next())
+    {
+        item.model = query.value(0).toString();
+        item.location = query.value(1).toInt();
+        item.trademark = query.value(2).toString();
+        item.part_num = query.value(3).toString();
+        item.voltage = query.value(4).toString();
+        item.amperage = query.value(5).toString();
+        item.quantity = query.value(6).toInt();
+        item.image = QImage::fromData(query.value(7).toByteArray(), "PNG");
+    }
+
+    db.close();
+}

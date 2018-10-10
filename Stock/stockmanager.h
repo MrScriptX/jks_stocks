@@ -23,6 +23,13 @@ struct powersupply
     QImage image;
 };
 
+enum datatype
+{
+    MODEL,
+    PART_NUM,
+    TRADEMARK
+};
+
 class StockManager
 {
 public:
@@ -32,6 +39,9 @@ public:
     void addItem(powersupply item);
     void removeItem(QString model);
     void updateItem(powersupply item, QString old_model);
+    void loadItem(const QString& model, powersupply& item);
+
+    void findItem(const QString& arg, const datatype& type, std::vector<powersupply>& items_list);
 private:
 
 };

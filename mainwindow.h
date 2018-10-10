@@ -7,6 +7,8 @@
 #include <QStandardItem>
 #include <QVBoxLayout>
 #include <QHeaderView>
+#include <QPixmap>
+#include <QLabel>
 #include <QMenuBar>
 #include <vector>
 #include <memory>
@@ -30,8 +32,11 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     void buildModel();
+    void buildModelfromItems(std::vector<powersupply>& items);
 
     void addPowerSupply();
+    void findPowerSupply();
+    void viewPowerSupply(powersupply& item);
 
 signals:
     void dataChanged();

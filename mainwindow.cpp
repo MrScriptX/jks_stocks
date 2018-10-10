@@ -8,6 +8,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
    QAction* new_item = menuBar()->addAction(tr("Nouveau"));
    connect(new_item, &QAction::triggered, this, &MainWindow::addPowerSupply);
+   QAction* find_item = menuBar()->addAction(tr("Chercher"));
+   connect(find_item, &QAction::triggered, this, &MainWindow::findPowerSupply);
+   QAction* refresh = menuBar()->addAction(tr("Rafraichir"));
+   connect(refresh, &QAction::triggered, this, [this]{this->buildModel();});
 
 
    m_table_view = new QTableView;
@@ -32,7 +36,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
           m_model->removeRow(index.row());
       });
 
+      QAction* view = new QAction(tr("voir"), this);
+      connect(view, &QAction::triggered, [this, index]{
+          powersupply item;
+          m_stock_manager->loadItem(m_model->itemFromIndex(index)->text(), item);
+          this->viewPowerSupply(item);
+      });
+
       QMenu* menu = new QMenu(this);
+      menu->addAction(view);
       menu->addAction(del);
       menu->popup(m_table_view->viewport()->mapToGlobal(pos));
    });
@@ -111,6 +123,66 @@ void MainWindow::buildModel()
     m_table_view->setModel(m_model);
 }
 
+void MainWindow::buildModelfromItems(std::vector<powersupply>& items)
+{
+    m_model->clear();
+    delete m_model;
+    m_model = new QStandardItemModel;
+
+
+    std::vector<items_list> data;
+    for(size_t i = 0; i < items.size(); i++)
+    {
+        data.push_back(items_list());
+
+        data[i].location = new QStandardItem;
+        data[i].location->setText(QString::number(items[i].location));
+        m_model->setItem(static_cast<int>(i), 0, data[i].location);
+
+        data[i].model_num = new QStandardItem;
+        data[i].model_num->setText(items[i].model);
+        m_model->setItem(static_cast<int>(i), 1, data[i].model_num);
+
+        data[i].trademark = new QStandardItem;
+        data[i].trademark->setText(items[i].trademark);
+        m_model->setItem(static_cast<int>(i), 2, data[i].trademark);
+
+        data[i].part_num = new QStandardItem;
+        data[i].part_num->setText(items[i].part_num);
+        m_model->setItem(static_cast<int>(i), 3, data[i].part_num);
+
+        data[i].voltage = new QStandardItem;
+        data[i].voltage->setText(items[i].voltage);
+        m_model->setItem(static_cast<int>(i), 4, data[i].voltage);
+
+        data[i].amperage = new QStandardItem;
+        data[i].amperage->setText(items[i].amperage);
+        m_model->setItem(static_cast<int>(i), 5, data[i].amperage);
+
+        data[i].quantity = new QStandardItem;
+        data[i].quantity->setText(QString::number(items[i].quantity));
+        m_model->setItem(static_cast<int>(i), 6, data[i].quantity);
+    }
+
+    connect(m_model, &QStandardItemModel::itemChanged, [this, items, data](QStandardItem* item) mutable {
+        QModelIndex index = item->index();
+
+        powersupply old_item = items[static_cast<size_t>(index.row())];
+
+        powersupply new_item;
+        new_item.model = data[static_cast<size_t>(index.row())].model_num->text();
+        new_item.location = data[static_cast<size_t>(index.row())].location->text().toInt();
+        new_item.trademark = data[static_cast<size_t>(index.row())].trademark->text();
+        new_item.part_num = data[static_cast<size_t>(index.row())].part_num->text();
+        new_item.voltage = data[static_cast<size_t>(index.row())].voltage->text();
+        new_item.amperage = data[static_cast<size_t>(index.row())].amperage->text();
+
+        m_stock_manager->updateItem(new_item, old_item.model);
+    });
+
+    m_table_view->setModel(m_model);
+}
+
 void MainWindow::addPowerSupply()
 {
     QWidget* window = new QWidget;
@@ -167,4 +239,48 @@ void MainWindow::addPowerSupply()
 
     window->setLayout(layout);
     window->show();
+}
+
+void MainWindow::findPowerSupply()
+{
+    QLineEdit* arg_bar = new QLineEdit;
+    QPushButton* model = new QPushButton(tr("Par modele"));
+    connect(model, &QPushButton::clicked, [this, arg_bar]{
+        std::vector<powersupply> items;
+        m_stock_manager->findItem(arg_bar->text(), datatype::MODEL, items);
+        this->buildModelfromItems(items);
+    });
+    QPushButton* part = new QPushButton(tr("Par numéro"));
+    connect(part, &QPushButton::clicked, [this, arg_bar]{
+        std::vector<powersupply> items;
+        m_stock_manager->findItem(arg_bar->text(), datatype::PART_NUM, items);
+        this->buildModelfromItems(items);
+    });
+    QPushButton* trademark = new QPushButton(tr("Par marque"));
+    connect(trademark, &QPushButton::clicked, [this, arg_bar]{
+        std::vector<powersupply> items;
+        m_stock_manager->findItem(arg_bar->text(), datatype::TRADEMARK, items);
+        this->buildModelfromItems(items);
+    });
+
+    QHBoxLayout* buttons = new QHBoxLayout;
+    buttons->addWidget(model);
+    buttons->addWidget(part);
+    buttons->addWidget(trademark);
+
+    QVBoxLayout* global = new QVBoxLayout;
+    global->addWidget(arg_bar);
+    global->addLayout(buttons);
+
+    QWidget* window = new QWidget();
+    window->setLayout(global);
+    window->show();
+}
+
+void MainWindow::viewPowerSupply(powersupply& item)
+{
+    QLabel* label = new QLabel;
+    label->setPixmap(QPixmap::fromImage(item.image));
+
+    label->show();
 }
