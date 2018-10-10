@@ -24,3 +24,6 @@ HEADERS += \
 
 RESOURCES += \
     ressources.qrc
+
+TARGET = JKS_Stock_Manager
+RC_FILE = jks_gestion.rc
